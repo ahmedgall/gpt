@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>مساعد ذكي</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .message {
+      max-width: 75%;
+      margin-bottom: 10px;
+      padding: 10px 15px;
+      border-radius: 12px;
+      word-break: break-word;
+    }
+    .user {
+      background-color: #dcfce7;
+      align-self: flex-end;
+    }
+    .bot {
+      background-color: #f3f4f6;
+      align-self: flex-start;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+
+  <div class="w-full max-w-2xl bg-white shadow rounded-lg flex flex-col h-[90vh]">
+
+    <div class="p-4 border-b font-bold text-xl text-green-600 text-center">
+      مساعد ذكي - ChatGPT
+    </div>
+
+    <div id="chatBox" class="flex-1 p-4 overflow-y-auto flex flex-col space-y-2"></div>
+
+    <form id="chatForm" class="flex border-t p-4 gap-2">
+      <input id="userInput" type="text" placeholder="اكتب سؤالك هنا..." 
+             class="flex-1 border rounded px-3 py-2 focus:outline-none focus:ring" required>
+      <button type="submit" 
+              class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">إرسال</button>
+    </form>
+
+  </div>
+
+  <script>
+    const apiKey = "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";
+    const chatBox = document.getElementById('chatBox');
+    const form = document.getElementById('chatForm');
+    const input = document.getElementById('userInput');
+
+    function addMessage(content, sender) {
+      const msg = document.createElement('div');
+      msg.className = `message ${sender}`;
+      msg.innerText = content;
+      chatBox.appendChild(msg);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const userMsg = input.value;
+      input.value = '';
+      addMessage(userMsg, 'user');
+
+      addMessage('...جاري التفكير', 'bot');
+
+      try {
+        const res = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${apiKey}`
+          },
+          body: JSON.stringify({
+            model: "gpt-3.5-turbo",
+            messages: [
+              { role: "system", content: "أنت مساعد ذكي باللغة العربية." },
+              { role: "user", content: userMsg }
+            ]
+          })
+        });
+
+        const data = await res.json();
+        const botReply = data.choices?.[0]?.message?.content || "حدث خطأ في الرد.";
+        document.querySelectorAll('.bot').at(-1).innerText = botReply;
+
+      } catch (err) {
+        document.querySelectorAll('.bot').at(-1).innerText = "خطأ في الاتصال بـ OpenAI.";
+      }
+    });
+  </script>
+
+</body>
+</html>
